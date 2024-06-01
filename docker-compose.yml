@@ -4,6 +4,8 @@ services:
   suno-api:
     build: .
     volumes:
-      - ./public:/app/public
+      - .:/app
     ports:
-      - "3000:3000"
+      - "8000:8000"
+    env_file:
+      - .env

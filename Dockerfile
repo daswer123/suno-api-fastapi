@@ -1,17 +1,7 @@
-# syntax=docker/dockerfile:1
-
-FROM node:lts-alpine AS builder
-WORKDIR /src
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-
-FROM node:lts-alpine
+FROM python:3.10-slim
 WORKDIR /app
-COPY package*.json ./
-COPY .env ./
-RUN npm install --only=production
-COPY --from=builder /src/.next ./.next
-EXPOSE 3000
-CMD ["npm", "run", "start"]
+COPY --from=builder /app/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]

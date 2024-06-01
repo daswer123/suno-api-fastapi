@@ -1,1 +1,4 @@
-fastapi[all]
+fastapi
+uvicorn
+gunicorn
+openai
