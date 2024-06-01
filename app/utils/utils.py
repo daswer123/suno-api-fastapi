@@ -3,12 +3,7 @@ import random
 from typing import Optional
 
 async def sleep(x: float, y: Optional[float] = None) -> None:
-    if y is not None and y != x:
-        min_val = min(x, y)
-        max_val = max(x, y)
-        timeout = asyncio.to_thread(lambda: random.uniform(min_val, max_val))
-    else:
-        timeout = x
+    timeout = random.uniform(x, y) if y is not None and y != x else x
     await asyncio.sleep(timeout)
 
 cors_headers = {

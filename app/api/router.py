@@ -7,7 +7,7 @@ from app.schemas.schemas import (
     CustomGenerateRequest, GenerateResponse,
     GenerateLyricsRequest, GenerateLyricsResponse,
     ExtendAudioRequest, ExtendAudioResponse,
-    ConcatAudioRequest, ConcatAudioResponse,
+    ConcatAudioRequest,
     GetMusicResponse, GetLimitResponse, GetClipResponse,
 )
 
@@ -78,13 +78,15 @@ async def extend_audio(request: ExtendAudioRequest, suno_api: SunoAPI = Depends(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/concat", response_model=ConcatAudioResponse)
+
+@router.post("/concat")
 async def concat_audio(request: ConcatAudioRequest, suno_api: SunoAPI = Depends(get_suno_api)):
     try:
         response = await suno_api.concatenate(request.clip_id)
         return {"data": response}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.get("/clip", response_model=GetClipResponse)
 async def get_clip(clip_id: str, suno_api: SunoAPI = Depends(get_suno_api)):

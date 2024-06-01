@@ -80,20 +80,26 @@ class SunoAPI:
         return await self._generate(payload, wait_audio)
 
     async def _generate(self, payload: dict, wait_audio: bool):
-        response = await self.client.post("/api/generate/v2/", json=payload)
-        data = response.json()
-        song_ids = [audio["id"] for audio in data["clips"]]
-        if wait_audio:
-            while True:
-                response = await self.get(song_ids)
-                all_completed = all(
-                    audio["status"] in ["streaming", "complete"] for audio in response
-                )
-                if all_completed:
-                    return response
-                await sleep(3, 6)
-        else:
-            return data["clips"]
+            response = await self.client.post("/api/generate/v2/", json=payload)
+            data = response.json()
+
+            if "clips" not in data:
+                raise Exception(f"Unexpected response from Suno API: {data}")
+
+            song_ids = [audio["id"] for audio in data["clips"]]
+
+            if wait_audio:
+                while True:
+                    response = await self.get(song_ids)
+                    all_completed = all(
+                        audio["status"] in ["streaming", "complete"] for audio in response
+                    )
+                    if all_completed:
+                        return response
+                    await sleep(3, 6)
+            else:
+                return data["clips"]
+
 
     async def generate_lyrics(self, prompt: str):
         await self.keep_alive()
@@ -104,8 +110,16 @@ class SunoAPI:
             response = await self.client.get(f"/api/generate/lyrics/{generate_id}")
             data = response.json()
             if data["status"] == "complete":
-                return data["lyrics"]
+                if "text" not in data:
+                    raise Exception(f"Unexpected response from Suno API: {data}")
+                return {
+                    "text": data["text"],
+                    "title": data["title"],
+                    "status": data["status"]
+                }
             await sleep(2)
+
+
 
     async def extend_audio(
         self,
@@ -113,25 +127,32 @@ class SunoAPI:
         prompt: str = "",
         continue_at: str = "0",
         tags: str = "",
-        title: str = "",
-    ):
+        title: str = ""
+):  
         await self.keep_alive()
         payload = {
             "continue_clip_id": audio_id,
             "continue_at": continue_at,
-            "mv": "chirp-v3-0",
+            "mv": "chirp-v3-5",
             "prompt": prompt,
             "tags": tags,
             "title": title,
         }
         response = await self.client.post("/api/generate/v2/", json=payload)
-        return response.json()
+        data = response.json()
+        if "detail" in data:
+            raise Exception(f"Error from Suno API: {data['detail']}")
+        return data
+
 
     async def concatenate(self, clip_id: str):
         await self.keep_alive()
         payload = {"clip_id": clip_id}
         response = await self.client.post("/api/generate/concat/v2/", json=payload)
-        return response.json()
+        data = response.json()
+        if "detail" in data:
+            raise Exception(f"Error from Suno API: {data['detail']}")
+        return data
 
     async def get(self, song_ids: Optional[List[str]] = None):
         await self.keep_alive()

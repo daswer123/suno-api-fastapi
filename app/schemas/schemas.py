@@ -45,7 +45,7 @@ class GenerateResponse(BaseModel):
     data: List[AudioInfo]
 
 class GenerateLyricsResponse(BaseModel):
-    data: str
+    data: dict
 
 class GetMusicResponse(BaseModel):
     data: List[AudioInfo]
@@ -54,10 +54,10 @@ class GetLimitResponse(BaseModel):
     data: dict
 
 class ExtendAudioResponse(BaseModel):
-    data: AudioInfo
+    data: dict
 
-class ConcatAudioResponse(BaseModel):
-    data: AudioInfo
+class ExtendAudioResponse(BaseModel):
+    data: dict
 
 class GetClipResponse(BaseModel):
     data: dict
